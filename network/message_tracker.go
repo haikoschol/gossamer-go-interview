@@ -20,7 +20,62 @@ type MessageTracker interface {
 // ErrMessageNotFound is an error returned by MessageTracker when a message with specified id is not found
 var ErrMessageNotFound = errors.New("message not found")
 
+// NewMessageTracker creates a new MessageTracker with a fixed length.
 func NewMessageTracker(length int) MessageTracker {
-	// TODO: Implement this constructor with your implementation of the MessageTracker interface
+	return &tracker{
+		length:   length,
+		messages: make([]*Message, 0),
+	}
+}
+
+type tracker struct {
+	length   int
+	messages []*Message
+}
+
+func (t *tracker) Add(message *Message) error {
+	for _, m := range t.messages {
+		if m.ID == message.ID {
+			return nil
+		}
+	}
+
+	if len(t.messages) == t.length {
+		t.messages = t.messages[1:]
+	}
+
+	t.messages = append(t.messages, message)
 	return nil
+}
+
+func (t *tracker) Delete(id string) error {
+	m := make([]*Message, 0)
+	found := false
+
+	for _, message := range t.messages {
+		if message.ID != id {
+			m = append(m, message)
+		} else {
+			found = true
+		}
+	}
+	t.messages = m
+
+	if !found {
+		return ErrMessageNotFound
+	}
+	return nil
+}
+
+func (t *tracker) Message(id string) (*Message, error) {
+	for _, message := range t.messages {
+		if message.ID == id {
+			return message, nil
+		}
+	}
+	return nil, ErrMessageNotFound
+}
+
+func (t *tracker) Messages() []*Message {
+	return t.messages
 }
