@@ -11,7 +11,7 @@ type MessageTracker interface {
 	Add(message *Message) (err error)
 	// Delete will delete message from tracker
 	Delete(id string) (err error)
-	// Get returns a message for a given ID.  Message is retained in tracker
+	// Message returns a message for a given ID. Message is retained in tracker
 	Message(id string) (message *Message, err error)
 	// Messages returns messages in FIFO order
 	Messages() (messages []*Message)
