@@ -1,6 +1,7 @@
 package network
 
 import (
+	"container/list"
 	"errors"
 )
 
@@ -24,54 +25,60 @@ var ErrMessageNotFound = errors.New("message not found")
 func NewMessageTracker(length int) MessageTracker {
 	return &tracker{
 		length:   length,
-		messages: make([]*Message, 0),
-		idxById:  make(map[string]int),
+		messages: list.New(),
+		elemById: make(map[string]*list.Element),
 	}
 }
 
 type tracker struct {
 	length   int
-	messages []*Message
-	idxById  map[string]int
+	messages *list.List
+	elemById map[string]*list.Element
 }
 
 func (t *tracker) Add(message *Message) error {
-	if _, ok := t.idxById[message.ID]; ok {
+	if _, ok := t.elemById[message.ID]; ok {
 		return nil
 	}
 
-	if len(t.messages) == t.length {
-		t.messages = t.messages[1:]
+	if t.messages.Len() == t.length {
+		front := t.messages.Front()
+		t.messages.Remove(front)
+		delete(t.elemById, front.Value.(*Message).ID)
 	}
 
-	t.messages = append(t.messages, message)
-	t.idxById[message.ID] = len(t.messages) - 1
+	t.elemById[message.ID] = t.messages.PushBack(message)
 	return nil
 }
 
 func (t *tracker) Delete(id string) error {
-	idx, ok := t.idxById[id]
+	elem, ok := t.elemById[id]
 	if !ok {
 		return ErrMessageNotFound
 	}
 
-	t.messages = append(t.messages[:idx], t.messages[idx+1:]...)
-	t.idxById = make(map[string]int)
-	for i, msg := range t.messages {
-		t.idxById[msg.ID] = i
-	}
+	t.messages.Remove(elem)
+	delete(t.elemById, id)
 	return nil
 }
 
 func (t *tracker) Message(id string) (*Message, error) {
-	idx, ok := t.idxById[id]
+	elem, ok := t.elemById[id]
 	if !ok {
 		return nil, ErrMessageNotFound
 	}
 
-	return t.messages[idx], nil
+	return elem.Value.(*Message), nil
 }
 
 func (t *tracker) Messages() []*Message {
-	return t.messages
+	messages := make([]*Message, len(t.elemById))
+	i := 0
+
+	for e := t.messages.Front(); e != nil; e = e.Next() {
+		messages[i] = e.Value.(*Message)
+		i++
+	}
+
+	return messages
 }
