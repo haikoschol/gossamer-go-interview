@@ -8,15 +8,23 @@ type tracker struct {
 	elemById map[string]*list.Element
 }
 
-func newTracker(length int) *tracker {
+func newTracker(length int) (*tracker, error) {
+	if length <= 0 {
+		return nil, ErrInvalidLength
+	}
+
 	return &tracker{
 		length:   length,
 		messages: list.New(),
 		elemById: make(map[string]*list.Element),
-	}
+	}, nil
 }
 
 func (t *tracker) Add(message *Message) error {
+	if message == nil || message.ID == "" {
+		return ErrInvalidMessage
+	}
+
 	if _, ok := t.elemById[message.ID]; ok {
 		return nil
 	}

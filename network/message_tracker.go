@@ -20,7 +20,13 @@ type MessageTracker interface {
 // ErrMessageNotFound is an error returned by MessageTracker when a message with specified id is not found
 var ErrMessageNotFound = errors.New("message not found")
 
+// ErrInvalidLength is an error returned by NewMessageTracker when length is less than or equal to zero
+var ErrInvalidLength = errors.New("length must be greater than zero")
+
+// ErrInvalidMessage is an error returned by MessageTracker when Add() is called with an invalid message
+var ErrInvalidMessage = errors.New("invalid message")
+
 // NewMessageTracker creates a new MessageTracker with a fixed length.
-func NewMessageTracker(length int) MessageTracker {
+func NewMessageTracker(length int) (MessageTracker, error) {
 	return newTracker(length)
 }

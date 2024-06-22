@@ -17,10 +17,47 @@ func generateMessage(n int) *network.Message {
 	}
 }
 
+func TestMessageTracker_NewMessageTracker(t *testing.T) {
+	t.Run("create with negative length", func(t *testing.T) {
+		mt, err := network.NewMessageTracker(-5)
+		assert.ErrorIs(t, err, network.ErrInvalidLength)
+		assert.Nil(t, mt)
+	})
+
+	t.Run("create with zero length", func(t *testing.T) {
+		mt, err := network.NewMessageTracker(0)
+		assert.ErrorIs(t, err, network.ErrInvalidLength)
+		assert.Nil(t, mt)
+	})
+}
+
 func TestMessageTracker_Add(t *testing.T) {
+	t.Run("add nil", func(t *testing.T) {
+		mt, err := network.NewMessageTracker(5)
+		assert.NoError(t, err)
+
+		err = mt.Add(nil)
+		assert.ErrorIs(t, err, network.ErrInvalidMessage)
+	})
+
+	t.Run("add message with invalid ID", func(t *testing.T) {
+		mt, err := network.NewMessageTracker(5)
+		assert.NoError(t, err)
+
+		message := &network.Message{
+			ID:     "",
+			PeerID: "somePeerID",
+			Data:   []byte{0, 1, 1},
+		}
+
+		err = mt.Add(message)
+		assert.ErrorIs(t, err, network.ErrInvalidMessage)
+	})
+
 	t.Run("add, get, then all messages", func(t *testing.T) {
 		length := 5
-		mt := network.NewMessageTracker(length)
+		mt, err := network.NewMessageTracker(length)
+		assert.NoError(t, err)
 
 		for i := 0; i < length; i++ {
 			err := mt.Add(generateMessage(i))
@@ -43,7 +80,8 @@ func TestMessageTracker_Add(t *testing.T) {
 
 	t.Run("add, get, then all messages, delete some", func(t *testing.T) {
 		length := 5
-		mt := network.NewMessageTracker(length)
+		mt, err := network.NewMessageTracker(length)
+		assert.NoError(t, err)
 
 		for i := 0; i < length; i++ {
 			err := mt.Add(generateMessage(i))
@@ -78,7 +116,8 @@ func TestMessageTracker_Add(t *testing.T) {
 
 	t.Run("not full, with duplicates", func(t *testing.T) {
 		length := 5
-		mt := network.NewMessageTracker(length)
+		mt, err := network.NewMessageTracker(length)
+		assert.NoError(t, err)
 
 		for i := 0; i < length-1; i++ {
 			err := mt.Add(generateMessage(i))
@@ -100,7 +139,8 @@ func TestMessageTracker_Add(t *testing.T) {
 
 	t.Run("not full, with duplicates from other peers", func(t *testing.T) {
 		length := 5
-		mt := network.NewMessageTracker(length)
+		mt, err := network.NewMessageTracker(length)
+		assert.NoError(t, err)
 
 		for i := 0; i < length-1; i++ {
 			err := mt.Add(generateMessage(i))
@@ -126,7 +166,8 @@ func TestMessageTracker_Add(t *testing.T) {
 func TestMessageTracker_Cleanup(t *testing.T) {
 	t.Run("overflow and cleanup", func(t *testing.T) {
 		length := 5
-		mt := network.NewMessageTracker(length)
+		mt, err := network.NewMessageTracker(length)
+		assert.NoError(t, err)
 
 		for i := 0; i < length*2; i++ {
 			err := mt.Add(generateMessage(i))
@@ -145,7 +186,8 @@ func TestMessageTracker_Cleanup(t *testing.T) {
 
 	t.Run("overflow and cleanup with duplicate", func(t *testing.T) {
 		length := 5
-		mt := network.NewMessageTracker(length)
+		mt, err := network.NewMessageTracker(length)
+		assert.NoError(t, err)
 
 		for i := 0; i < length*2; i++ {
 			err := mt.Add(generateMessage(i))
@@ -171,8 +213,9 @@ func TestMessageTracker_Cleanup(t *testing.T) {
 func TestMessageTracker_Delete(t *testing.T) {
 	t.Run("empty tracker", func(t *testing.T) {
 		length := 5
-		mt := network.NewMessageTracker(length)
-		err := mt.Delete("bleh")
+		mt, err := network.NewMessageTracker(length)
+		assert.NoError(t, err)
+		err = mt.Delete("bleh")
 		assert.ErrorIs(t, err, network.ErrMessageNotFound)
 	})
 }
@@ -180,7 +223,8 @@ func TestMessageTracker_Delete(t *testing.T) {
 func TestMessageTracker_Message(t *testing.T) {
 	t.Run("empty tracker", func(t *testing.T) {
 		length := 5
-		mt := network.NewMessageTracker(length)
+		mt, err := network.NewMessageTracker(length)
+		assert.NoError(t, err)
 		msg, err := mt.Message("bleh")
 		assert.ErrorIs(t, err, network.ErrMessageNotFound)
 		assert.Nil(t, msg)
@@ -199,7 +243,10 @@ var benchInputs = []struct {
 func BenchmarkMessageTracker_Add(b *testing.B) {
 	for _, v := range benchInputs {
 		b.Run(fmt.Sprintf("queue_length_%d", v.queueLength), func(b *testing.B) {
-			mt := network.NewMessageTracker(v.queueLength)
+			mt, err := network.NewMessageTracker(v.queueLength)
+			if err != nil {
+				b.Fail()
+			}
 
 			for i := 0; i < b.N; i++ {
 				err := mt.Add(generateMessage(i))
@@ -269,7 +316,11 @@ func BenchmarkMessageTracker_Messages(b *testing.B) {
 }
 
 func makeFilledTracker(b *testing.B, queueLength int) network.MessageTracker {
-	mt := network.NewMessageTracker(queueLength)
+	mt, err := network.NewMessageTracker(queueLength)
+	if err != nil {
+		b.Fail()
+	}
+
 	for i := 0; i < queueLength; i++ {
 		err := mt.Add(generateMessage(i))
 		if err != nil {
