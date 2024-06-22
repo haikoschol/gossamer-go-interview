@@ -1,0 +1,14 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/ChainSafe/gossamer-go-interview/network
+Benchmark_Add_small_queue-8         	  535887	      2221 ns/op	     142 B/op	       6 allocs/op
+Benchmark_Add_medium_queue-8        	  127194	    123425 ns/op	     163 B/op	       5 allocs/op
+Benchmark_Add_large_queue-8         	  127160	    142295 ns/op	     164 B/op	       5 allocs/op
+Benchmark_Delete_small_queue-8      	  498967	      2151 ns/op	    9343 B/op	      10 allocs/op
+Benchmark_Delete_medium_queue-8     	     752	   1776466 ns/op	 4496507 B/op	      28 allocs/op
+Benchmark_Message_small_queue-8     	 1988323	       581.0 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Message_medium_queue-8    	   10000	    102556 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Messages_small_queue-8    	903947992	         1.333 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Messages_medium_queue-8   	893696644	         1.344 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/ChainSafe/gossamer-go-interview/network	179.407s
