@@ -223,9 +223,9 @@ func Benchmark_Delete_medium_queue(b *testing.B) {
 	benchmarkDelete(b, MEDIUM, 1000)
 }
 
-//func Benchmark_Delete_large_queue(b *testing.B) {
-//	benchmarkDelete(b, LARGE, 1000)
-//}
+func Benchmark_Delete_large_queue(b *testing.B) {
+	benchmarkDelete(b, LARGE, 1000)
+}
 
 // benchmarkDelete puts queueLength sequentially generated messages into the queue and picks idCount random message IDs
 // to delete from the queue inside the benchmark loop. The benchmark does not currently cover deleting messages that are
@@ -253,9 +253,9 @@ func Benchmark_Message_medium_queue(b *testing.B) {
 	benchmarkMessage(b, MEDIUM)
 }
 
-//func Benchmark_Message_large_queue(b *testing.B) {
-//	benchmarkMessage(b, LARGE)
-//}
+func Benchmark_Message_large_queue(b *testing.B) {
+	benchmarkMessage(b, LARGE)
+}
 
 func benchmarkMessage(b *testing.B, queueLength int) {
 	mt := makeFilledTracker(b, queueLength)
@@ -284,9 +284,9 @@ func Benchmark_Messages_medium_queue(b *testing.B) {
 	benchmarkMessages(b, MEDIUM)
 }
 
-//func Benchmark_Messages_large_queue(b *testing.B) {
-//	benchmarkMessages(b, LARGE)
-//}
+func Benchmark_Messages_large_queue(b *testing.B) {
+	benchmarkMessages(b, LARGE)
+}
 
 // avoid inlining of MessageTracker.Messages()
 var messages []*network.Message

@@ -25,19 +25,19 @@ func NewMessageTracker(length int) MessageTracker {
 	return &tracker{
 		length:   length,
 		messages: make([]*Message, 0),
+		idxById:  make(map[string]int),
 	}
 }
 
 type tracker struct {
 	length   int
 	messages []*Message
+	idxById  map[string]int
 }
 
 func (t *tracker) Add(message *Message) error {
-	for _, m := range t.messages {
-		if m.ID == message.ID {
-			return nil
-		}
+	if _, ok := t.idxById[message.ID]; ok {
+		return nil
 	}
 
 	if len(t.messages) == t.length {
@@ -45,35 +45,31 @@ func (t *tracker) Add(message *Message) error {
 	}
 
 	t.messages = append(t.messages, message)
+	t.idxById[message.ID] = len(t.messages) - 1
 	return nil
 }
 
 func (t *tracker) Delete(id string) error {
-	m := make([]*Message, 0)
-	found := false
-
-	for _, message := range t.messages {
-		if message.ID != id {
-			m = append(m, message)
-		} else {
-			found = true
-		}
-	}
-	t.messages = m
-
-	if !found {
+	idx, ok := t.idxById[id]
+	if !ok {
 		return ErrMessageNotFound
+	}
+
+	t.messages = append(t.messages[:idx], t.messages[idx+1:]...)
+	t.idxById = make(map[string]int)
+	for i, msg := range t.messages {
+		t.idxById[msg.ID] = i
 	}
 	return nil
 }
 
 func (t *tracker) Message(id string) (*Message, error) {
-	for _, message := range t.messages {
-		if message.ID == id {
-			return message, nil
-		}
+	idx, ok := t.idxById[id]
+	if !ok {
+		return nil, ErrMessageNotFound
 	}
-	return nil, ErrMessageNotFound
+
+	return t.messages[idx], nil
 }
 
 func (t *tracker) Messages() []*Message {
