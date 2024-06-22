@@ -1,17 +1,17 @@
 goos: darwin
 goarch: arm64
 pkg: github.com/ChainSafe/gossamer-go-interview/network
-Benchmark_Add_small_queue-8         	 3743500	       294.9 ns/op	     175 B/op	       7 allocs/op
-Benchmark_Add_medium_queue-8        	 3013423	       407.8 ns/op	     182 B/op	       7 allocs/op
-Benchmark_Add_large_queue-8         	 2245087	       495.4 ns/op	     228 B/op	       7 allocs/op
-Benchmark_Delete_small_queue-8      	38393037	        30.52 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Delete_medium_queue-8     	27500570	        42.99 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Delete_large_queue-8      	29813386	        40.42 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Message_small_queue-8     	68637123	        16.90 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Message_medium_queue-8    	22439902	        52.15 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Message_large_queue-8     	12797433	        93.00 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Messages_small_queue-8    	  513691	      2179 ns/op	    8192 B/op	       1 allocs/op
-Benchmark_Messages_medium_queue-8   	    2986	    372617 ns/op	  802816 B/op	       1 allocs/op
-Benchmark_Messages_large_queue-8    	     165	   6444508 ns/op	 8003585 B/op	       1 allocs/op
+BenchmarkMessageTracker_Add/queue_length_1000-8         	 4029939	       296.6 ns/op	     175 B/op	       7 allocs/op
+BenchmarkMessageTracker_Add/queue_length_100000-8       	 2905910	       417.8 ns/op	     181 B/op	       7 allocs/op
+BenchmarkMessageTracker_Add/queue_length_1000000-8      	 2130795	       524.1 ns/op	     230 B/op	       7 allocs/op
+BenchmarkMessageTracker_Delete/queue_length_1000-8      	38195019	        30.97 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMessageTracker_Delete/queue_length_100000-8    	27318178	        43.01 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMessageTracker_Delete/queue_length_1000000-8   	30307399	        38.95 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMessageTracker_Message/queue_length_1000-8     	66815608	        16.39 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMessageTracker_Message/queue_length_100000-8   	24412592	        42.52 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMessageTracker_Message/queue_length_1000000-8  	14830888	        81.54 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMessageTracker_Messages/queue_length_1000-8    	  516027	      2125 ns/op	    8192 B/op	       1 allocs/op
+BenchmarkMessageTracker_Messages/queue_length_100000-8  	    3613	    342890 ns/op	  802816 B/op	       1 allocs/op
+BenchmarkMessageTracker_Messages/queue_length_1000000-8 	     226	   5430532 ns/op	 8003584 B/op	       1 allocs/op
 PASS
-ok  	github.com/ChainSafe/gossamer-go-interview/network	25.215s
+ok  	github.com/ChainSafe/gossamer-go-interview/network	24.325s

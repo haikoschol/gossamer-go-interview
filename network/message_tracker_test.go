@@ -187,115 +187,84 @@ func TestMessageTracker_Message(t *testing.T) {
 	})
 }
 
-const SMALL = 1000
-const MEDIUM = 100_000
-const LARGE = 1_000_000
-
-func Benchmark_Add_small_queue(b *testing.B) {
-	mt := network.NewMessageTracker(SMALL)
-	benchmarkAdd(b, mt)
+var benchInputs = []struct {
+	queueLength int
+	idCount     int
+}{
+	{queueLength: 1000, idCount: 1000},
+	{queueLength: 100_000, idCount: 1000},
+	{queueLength: 1_000_000, idCount: 1000},
 }
 
-func Benchmark_Add_medium_queue(b *testing.B) {
-	mt := network.NewMessageTracker(MEDIUM)
-	benchmarkAdd(b, mt)
-}
+func BenchmarkMessageTracker_Add(b *testing.B) {
+	for _, v := range benchInputs {
+		b.Run(fmt.Sprintf("queue_length_%d", v.queueLength), func(b *testing.B) {
+			mt := network.NewMessageTracker(v.queueLength)
 
-func Benchmark_Add_large_queue(b *testing.B) {
-	mt := network.NewMessageTracker(LARGE)
-	benchmarkAdd(b, mt)
-}
-
-func benchmarkAdd(b *testing.B, mt network.MessageTracker) {
-	for i := 0; i < b.N; i++ {
-		err := mt.Add(generateMessage(i))
-		if err != nil {
-			b.Fail()
-		}
+			for i := 0; i < b.N; i++ {
+				err := mt.Add(generateMessage(i))
+				if err != nil {
+					b.Fail()
+				}
+			}
+		})
 	}
 }
 
-func Benchmark_Delete_small_queue(b *testing.B) {
-	benchmarkDelete(b, SMALL, 1000)
-}
+// BenchmarkMessageTracker_Delete puts queueLength sequentially generated messages into the queue and picks idCount
+// random message IDs to delete from the queue inside the benchmark loop. The benchmark does not currently cover
+// deleting messages that are not in the queue.
+func BenchmarkMessageTracker_Delete(b *testing.B) {
+	for _, v := range benchInputs {
+		b.Run(fmt.Sprintf("queue_length_%d", v.queueLength), func(b *testing.B) {
+			mt := makeFilledTracker(b, v.queueLength)
+			messages := mt.Messages()
+			ids := make([]string, v.idCount)
 
-func Benchmark_Delete_medium_queue(b *testing.B) {
-	benchmarkDelete(b, MEDIUM, 1000)
-}
+			for i := 0; i < len(ids); i++ {
+				ids[i] = messages[rand.Intn(v.queueLength)].ID
+			}
 
-func Benchmark_Delete_large_queue(b *testing.B) {
-	benchmarkDelete(b, LARGE, 1000)
-}
-
-// benchmarkDelete puts queueLength sequentially generated messages into the queue and picks idCount random message IDs
-// to delete from the queue inside the benchmark loop. The benchmark does not currently cover deleting messages that are
-// not in the queue.
-func benchmarkDelete(b *testing.B, queueLength int, idCount int) {
-	mt := makeFilledTracker(b, queueLength)
-	messages := mt.Messages()
-	ids := make([]string, idCount)
-
-	for i := 0; i < len(ids); i++ {
-		ids[i] = messages[rand.Intn(queueLength)].ID
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = mt.Delete(ids[i%len(ids)])
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_ = mt.Delete(ids[i%len(ids)])
+			}
+		})
 	}
 }
 
-func Benchmark_Message_small_queue(b *testing.B) {
-	benchmarkMessage(b, SMALL)
-}
+func BenchmarkMessageTracker_Message(b *testing.B) {
+	for _, v := range benchInputs {
+		b.Run(fmt.Sprintf("queue_length_%d", v.queueLength), func(b *testing.B) {
+			mt := makeFilledTracker(b, v.queueLength)
+			messages := mt.Messages()
+			ids := make([]string, v.queueLength*2)
 
-func Benchmark_Message_medium_queue(b *testing.B) {
-	benchmarkMessage(b, MEDIUM)
-}
+			for i := 0; i < len(ids); i++ {
+				if rand.Intn(2) == 0 {
+					ids[i] = messages[rand.Intn(v.queueLength)].ID
+				} else {
+					ids[i] = fmt.Sprintf("notInQueue%d", i)
+				}
+			}
 
-func Benchmark_Message_large_queue(b *testing.B) {
-	benchmarkMessage(b, LARGE)
-}
-
-func benchmarkMessage(b *testing.B, queueLength int) {
-	mt := makeFilledTracker(b, queueLength)
-	messages := mt.Messages()
-	ids := make([]string, queueLength*2)
-
-	for i := 0; i < len(ids); i++ {
-		if rand.Intn(2) == 0 {
-			ids[i] = messages[rand.Intn(queueLength)].ID
-		} else {
-			ids[i] = fmt.Sprintf("notInQueue%d", i)
-		}
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = mt.Message(ids[i%len(ids)])
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_, _ = mt.Message(ids[i%len(ids)])
+			}
+		})
 	}
 }
 
-func Benchmark_Messages_small_queue(b *testing.B) {
-	benchmarkMessages(b, SMALL)
-}
-
-func Benchmark_Messages_medium_queue(b *testing.B) {
-	benchmarkMessages(b, MEDIUM)
-}
-
-func Benchmark_Messages_large_queue(b *testing.B) {
-	benchmarkMessages(b, LARGE)
-}
-
-// avoid inlining of MessageTracker.Messages()
-var messages []*network.Message
-
-func benchmarkMessages(b *testing.B, queueLength int) {
-	mt := makeFilledTracker(b, queueLength)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		messages = mt.Messages()
+func BenchmarkMessageTracker_Messages(b *testing.B) {
+	for _, v := range benchInputs {
+		b.Run(fmt.Sprintf("queue_length_%d", v.queueLength), func(b *testing.B) {
+			mt := makeFilledTracker(b, v.queueLength)
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				_ = mt.Messages()
+			}
+		})
 	}
 }
 
